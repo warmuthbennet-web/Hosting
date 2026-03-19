@@ -1,0 +1,28 @@
+body {
+  background: #111;
+  color: white;
+  text-align: center;
+  font-family: Arial;
+}
+
+input {
+  padding: 8px;
+  margin: 5px;
+}
+
+button {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.card {
+  background: #222;
+  margin: 10px auto;
+  padding: 10px;
+  width: 400px;
+  text-align: left;
+  border-radius: 5px;
+}
+
+.online { color: lime; }
+.offline { color: red; }
