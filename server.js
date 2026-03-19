@@ -7,30 +7,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static("public"));
 
-let jobs = {};
+// Alle statischen Dateien (CSS/JS) aus demselben Ordner
+app.use("/static", express.static(__dirname));
+
+// Daten speichern
 let sites = fs.existsSync("data.json") ? JSON.parse(fs.readFileSync("data.json")) : [];
+let jobs = {};
 
-// 💾 speichern
 function save() {
   fs.writeFileSync("data.json", JSON.stringify(sites, null, 2));
 }
 
-// Root Route für Browserzugriff
+// Root-Route zeigt index.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Alle Seiten zurückgeben
+// Alle Sites zurückgeben
 app.get("/sites", (req, res) => res.json(sites));
 
-// Neue Seite hinzufügen
+// Neue Site hinzufügen
 app.post("/add", (req, res) => {
   const { url, interval } = req.body;
-  if (!url) return res.send("Fehlt URL");
+  if (!url) return res.status(400).send("Fehlt URL");
 
-  if (sites.find(s => s.url === url)) return res.send("URL existiert schon");
+  if (sites.find(s => s.url === url)) return res.status(400).send("URL existiert schon");
 
   const site = {
     url,
@@ -45,21 +47,18 @@ app.post("/add", (req, res) => {
   res.send("Gespeichert!");
 });
 
-// Seite löschen
+// Site löschen
 app.post("/delete", (req, res) => {
   const { url } = req.body;
-
   sites = sites.filter(s => s.url !== url);
   if (jobs[url]) clearInterval(jobs[url]);
-
   save();
   res.send("Gelöscht");
 });
 
-// Funktion um echte Website zu pingen
+// Ping-Funktion echte Websites
 function startPing(site) {
   if (jobs[site.url]) clearInterval(jobs[site.url]);
-
   jobs[site.url] = setInterval(async () => {
     try {
       const response = await fetch(site.url, { method: "GET", timeout: 10000 });
@@ -70,10 +69,11 @@ function startPing(site) {
   }, site.interval || 60000);
 }
 
-// Beim Start alle Sites pingen
+// Alle Sites beim Start pingen
 sites.forEach(startPing);
 
-// Ping Endpoint für UptimeRobot
+// Ping-Endpunkt für UptimeRobot
 app.get("/ping", (req, res) => res.send("OK"));
 
+// Server starten
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
