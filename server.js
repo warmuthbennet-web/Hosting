@@ -1,6 +1,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,10 +12,15 @@ app.use(express.static("public"));
 let jobs = {};
 let sites = fs.existsSync("data.json") ? JSON.parse(fs.readFileSync("data.json")) : [];
 
-// 💾 Speichern
+// 💾 speichern
 function save() {
   fs.writeFileSync("data.json", JSON.stringify(sites, null, 2));
 }
+
+// Root Route für Browserzugriff
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // Alle Seiten zurückgeben
 app.get("/sites", (req, res) => res.json(sites));
@@ -67,7 +73,7 @@ function startPing(site) {
 // Beim Start alle Sites pingen
 sites.forEach(startPing);
 
-// Ping Endpoint für externe Dienste
+// Ping Endpoint für UptimeRobot
 app.get("/ping", (req, res) => res.send("OK"));
 
 app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
